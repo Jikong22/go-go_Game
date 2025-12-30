@@ -66,11 +66,11 @@ def draw_right_panel(screen, pit, font):
     screen.blit(title, (base_x + 20, 50))
 
     status_color = (255, 0, 0) # Red (Closed)
-    status_text = "CLOSED"
+    status_text = "Nope."
     
     if pit.is_open:
         status_color = (0, 255, 0) # Green (Open)
-        status_text = "OPEN!"
+        status_text = "Box, Box!"
     
     pygame.draw.rect(screen, status_color, (base_x + 50, 150, 200, 100))
     text_surf = font.render(status_text, True, (0,0,0) if pit.is_open else (255,255,255))

@@ -1,14 +1,18 @@
 import pygame
 import random
+import os
 from settings import OBSTACLE_SPEED
 
 class Obstacle:
     WIDTH = 50
-    HEIGHT = 50
+    HEIGHT = 100
 
-    def __init__(self, x, y):
+    # [수정] 생성 시 이미지(image)를 인자로 받도록 변경
+    def __init__(self, x, y, image=None):
         self.x = x
         self.y = y
+        self.image = image  # 전달받은 이미지를 저장
+        
         # 충돌 판정을 위한 Rect 미리 생성
         self.rect_obj = pygame.Rect(x, y, self.WIDTH, self.HEIGHT)
 
@@ -25,7 +29,25 @@ class ObstacleManager:
         self.center_rect = center_rect
         self.obstacles = []
         self.spawn_timer = 0.0
-        self.spawn_interval = 0.1 # 0.1초마다 생성 시도 (조절 가능)
+        self.spawn_interval = 0.5 # 0.5초마다 생성 시도
+        
+        # --- [추가] 장애물 이미지 3장 로드 ---
+        self.obs_images = []
+        filenames = ["obs1.png", "obs2.png", "obs3.png"]
+        
+        for name in filenames:
+            if os.path.exists(name):
+                try:
+                    img = pygame.image.load(name)
+                    # 장애물 크기(50x50)에 맞게 크기 조절
+                    img = pygame.transform.scale(img, (Obstacle.WIDTH, Obstacle.HEIGHT))
+                    self.obs_images.append(img)
+                    print(f"{name} 로드 성공")
+                except:
+                    print(f"{name} 로드 실패")
+            else:
+                print(f"{name} 파일이 없습니다. (기본 도형 사용)")
+        # -----------------------------------
 
     def update(self, dt):
         # 1. 기존 장애물 이동
@@ -35,34 +57,30 @@ class ObstacleManager:
         # 화면 아래로 내려간 장애물 삭제
         self.obstacles = [o for o in self.obstacles if o.y < 720]
 
-        # 2. 장애물 생성 로직 개선
+        # 2. 새 장애물 생성 로직
         self.spawn_timer += dt
-        
-        # 일정 시간이 지나면 생성 시도
         if self.spawn_timer >= self.spawn_interval:
-            # 생성 시도 (성공하면 타이머 리셋)
+            self.spawn_timer = 0
             if self.try_spawn_obstacle():
-                self.spawn_timer = 0
-                # 다음 생성 시간은 약간 랜덤하게 (0.2초 ~ 0.4초 사이)
-                self.spawn_interval = random.uniform(0.2, 0.4)
+                pass # 생성 성공
 
     def try_spawn_obstacle(self):
-        # 최대 5번 시도해서 빈 자리를 찾음
-        for _ in range(5):
-            # 랜덤 X 좌표 (도로 폭 안에서)
-            x = random.randint(0, self.center_rect.width - Obstacle.WIDTH)
-            y = -60 # 화면 살짝 위에서 생성
+        # 도로 내에서 랜덤 X 좌표 (겹치지 않게 시도)
+        attempts = 0
+        max_attempts = 10
+        
+        while attempts < max_attempts:
+            attempts += 1
+            w = self.center_rect.width
+            x = random.randint(0, w - Obstacle.WIDTH)
+            y = -Obstacle.HEIGHT # 화면 위쪽 바깥에서 시작
             
-            # 새로 만들 장애물의 영역 (여유 공간 포함)
-            # 가로/세로에 10px 정도 여유를 둬서 딱 붙지 않게 함
-            new_rect = pygame.Rect(x - 10, y - 20, Obstacle.WIDTH + 20, Obstacle.HEIGHT + 40)
+            new_rect = pygame.Rect(x, y, Obstacle.WIDTH, Obstacle.HEIGHT)
             
             # 기존 장애물들과 겹치는지 확인
             collided = False
             for obs in self.obstacles:
-                # 화면 상단에 있는 장애물들만 검사하면 됨 (y < 200)
-                if obs.y < 200:
-                    # 기존 장애물 영역
+                if obs.y < 200: # 화면 상단에 있는 장애물만 검사
                     existing_rect = pygame.Rect(obs.x, obs.y, Obstacle.WIDTH, Obstacle.HEIGHT)
                     if new_rect.colliderect(existing_rect):
                         collided = True
@@ -70,29 +88,42 @@ class ObstacleManager:
             
             # 겹치지 않는다면 생성 확정
             if not collided:
-                self.obstacles.append(Obstacle(x, y))
-                return True # 생성 성공
+                # [수정] 이미지 리스트가 있으면 랜덤으로 하나 뽑음
+                selected_img = None
+                if self.obs_images:
+                    selected_img = random.choice(self.obs_images)
+                
+                # 이미지를 가지고 장애물 생성
+                self.obstacles.append(Obstacle(x, y, selected_img))
+                return True 
         
-        return False # 자리 못 찾음 (생성 실패)
+        return False 
 
     def draw(self, screen, offset_x):
         for obs in self.obstacles:
-            # 장애물 이미지 (빨간 네모 + 테두리)
             r = obs.rect(offset_x)
-            pygame.draw.rect(screen, (200, 50, 50), r)
-            pygame.draw.rect(screen, (100, 0, 0), r, 3) # 테두리
+            
+            # [수정] 이미지가 있으면 이미지를 그리고, 없으면 네모를 그림
+            if obs.image:
+                screen.blit(obs.image, (r.x, r.y))
+            else:
+                # 이미지 없을 때 (기존 빨간 네모)
+                pygame.draw.rect(screen, (200, 50, 50), r)
+                pygame.draw.rect(screen, (100, 0, 0), r, 3)
 
     def remove_collided(self, car, offset_x):
         car_rect = car.rect(offset_x)
-        collided_obstacles = []
+        collided_list = []
+        
+        # 충돌한 장애물 찾기
         for obs in self.obstacles:
             if car_rect.colliderect(obs.rect(offset_x)):
-                collided_obstacles.append(obs)
+                collided_list.append(obs)
         
-        # 충돌한 장애물 리스트에서 제거
-        for obs in collided_obstacles:
-            if obs in self.obstacles:
+        # 제거 및 결과 반환
+        if collided_list:
+            for obs in collided_list:
                 self.obstacles.remove(obs)
-                return True # 충돌 발생 알림
-        
+            return True # 충돌 발생함
+            
         return False

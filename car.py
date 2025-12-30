@@ -4,7 +4,7 @@ import os
 
 class Car:
     WIDTH = 50
-    HEIGHT = 80
+    HEIGHT = 100
 
     COLORS = {
         'basic': (0,0,255),   # 파랑
