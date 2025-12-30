@@ -25,7 +25,7 @@ class ObstacleManager:
         self.center_rect = center_rect
         self.obstacles = []
         self.spawn_timer = 0.0
-        self.spawn_interval = 0.3 # 0.3초마다 생성 시도 (조절 가능)
+        self.spawn_interval = 0.1 # 0.1초마다 생성 시도 (조절 가능)
 
     def update(self, dt):
         # 1. 기존 장애물 이동
@@ -43,8 +43,8 @@ class ObstacleManager:
             # 생성 시도 (성공하면 타이머 리셋)
             if self.try_spawn_obstacle():
                 self.spawn_timer = 0
-                # 다음 생성 시간은 약간 랜덤하게 (0.3초 ~ 0.5초 사이)
-                self.spawn_interval = random.uniform(0.3, 0.5)
+                # 다음 생성 시간은 약간 랜덤하게 (0.2초 ~ 0.4초 사이)
+                self.spawn_interval = random.uniform(0.2, 0.4)
 
     def try_spawn_obstacle(self):
         # 최대 5번 시도해서 빈 자리를 찾음

@@ -21,7 +21,7 @@ CAR_TYPES = {
     'durable': {'speed': 200, 'durability_per_sec': 2, 'max_durability': 100}
 }
 
-OBSTACLE_SPEED = 400
+OBSTACLE_SPEED = 500
 
 SCORES_FILE = 'scores.json'
 

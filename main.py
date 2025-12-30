@@ -6,8 +6,22 @@ from game import run_game
 from scoreboard import draw_scores, save_score, reset_scores
 
 pygame.init()
+pygame.mixer.init() ### 2. 믹서 초기화 (소리 재생을 위해 필수) ###
 screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
 pygame.display.set_caption("피하go 달리go")
+
+# 3. 배경음악 로드 및 무한 반복 재생
+bgm_path = 'bgm.mp3'
+if os.path.exists(bgm_path):
+    try:
+        pygame.mixer.music.load(bgm_path)
+        pygame.mixer.music.set_volume(0.3) # 볼륨 조절 (0.0 ~ 1.0)
+        pygame.mixer.music.play(-1)        # -1은 무한 반복 의미
+        print("BGM 재생 시작")
+    except Exception as e:
+        print(f"BGM 로드 실패: {e}")
+else:
+    print("bgm.wav 파일을 찾을 수 없습니다. create_bgm.py를 먼저 실행하세요.")
 
 # 폰트 로드 (파일 경로인지 이름인지 확인)
 if FONT_NAME and (os.path.exists(FONT_NAME) or FONT_NAME.endswith('.ttf')):
