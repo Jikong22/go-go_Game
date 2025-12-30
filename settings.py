@@ -1,4 +1,5 @@
 import pygame
+import os
 
 # 폰트 모듈 초기화
 pygame.init()
@@ -15,9 +16,9 @@ RIGHT_W = 300
 
 # 자동차 설정
 CAR_TYPES = {
-    'basic': {'speed': 350, 'durability_per_sec': 3, 'max_durability': 100},
-    'speed': {'speed': 450, 'durability_per_sec': 6, 'max_durability': 80},
-    'durable': {'speed': 280, 'durability_per_sec': 1, 'max_durability': 150}
+    'basic': {'speed': 300, 'durability_per_sec': 1.5, 'max_durability': 100},
+    'speed': {'speed': 400, 'durability_per_sec': 2.5, 'max_durability': 100},
+    'durable': {'speed': 200, 'durability_per_sec': 1, 'max_durability': 100}
 }
 
 OBSTACLE_SPEED = 200
@@ -30,8 +31,9 @@ PIT_BASE_CHANCE = 0.4
 PIT_CHANCE_INC = 0.05
 PIT_DURATION = 5.0
 
-# === 폰트 자동 선택 로직 (수정됨) ===
+# === 폰트 자동 선택 로직 (강화됨) ===
 def get_korean_font_name():
+    # 1. 시스템 폰트 이름으로 찾기
     fonts = ['malgungothic', 'apple sd gothic neo', 'applegothic', 'nanumgothic', 'gulim', 'arial']
     available = pygame.font.get_fonts()
     
@@ -39,7 +41,13 @@ def get_korean_font_name():
         if name in available:
             return name
             
-    # 못 찾아도 윈도우 기본 폰트인 맑은 고딕을 강제로 리턴
-    return 'malgungothic'
+    # 2. 폰트를 못 찾았을 경우, 윈도우 맑은고딕 경로 강제 지정
+    # (폰트 파일이 있으면 무조건 나옵니다)
+    font_path = 'C:/Windows/Fonts/malgun.ttf'
+    if os.path.exists(font_path):
+        return font_path
+
+    # 3. 진짜 아무것도 없으면 None (영어만 나오지만 깨지진 않음)
+    return None
 
 FONT_NAME = get_korean_font_name()

@@ -53,7 +53,7 @@ class StartMenu:
                 ))
         elif self.state == 'car_select':
             car_buttons = [
-                (self.btn_basic,'기본',(0,0,255)),
+                (self.btn_basic,'기본형',(0,0,255)),
                 (self.btn_speed,'속도형',(255,255,0)),
                 (self.btn_durable,'내구형',(0,255,0))
             ]

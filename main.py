@@ -1,19 +1,25 @@
-# main.py
 import pygame
+import os
 from settings import SCREEN_W, SCREEN_H, FONT_NAME
 from menu import StartMenu
 from game import run_game
-from scoreboard import draw_scores, save_score
+from scoreboard import draw_scores, save_score, reset_scores
 
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
-pygame.display.set_caption("목련제 레이싱")
+pygame.display.set_caption("피하go 달리go")
 
-# --- 폰트 설정 (settings.py의 FONT_NAME 사용) ---
-# 시스템 폰트가 없으면 기본 폰트 사용
-font_big = pygame.font.SysFont(FONT_NAME, 80) # Game Over용으로 조금 더 크게
-font_mid = pygame.font.SysFont(FONT_NAME, 40)
-font_small = pygame.font.SysFont(FONT_NAME, 24)
+# 폰트 로드 (파일 경로인지 이름인지 확인)
+if FONT_NAME and (os.path.exists(FONT_NAME) or FONT_NAME.endswith('.ttf')):
+    # 파일 경로인 경우
+    font_big = pygame.font.Font(FONT_NAME, 80)
+    font_mid = pygame.font.Font(FONT_NAME, 40)
+    font_small = pygame.font.Font(FONT_NAME, 24)
+else:
+    # 시스템 폰트 이름인 경우 (혹은 None)
+    font_big = pygame.font.SysFont(FONT_NAME, 80)
+    font_mid = pygame.font.SysFont(FONT_NAME, 40)
+    font_small = pygame.font.SysFont(FONT_NAME, 24)
 
 fonts = (font_big, font_mid, font_small)
 
@@ -21,17 +27,23 @@ menu = StartMenu(fonts)
 nickname = '익명'
 car_type = 'basic'
 score = 0
-state = 'menu' # 현재 게임 상태 (menu, game, game_over, score, help)
+state = 'menu'
+
+# 비밀번호 입력 관련
+input_pw = ""
+pw_error_timer = 0
 
 running = True
+clock = pygame.time.Clock()
+
 while running:
-    # 1. 이벤트 처리
+    # 1. 이벤트 처리 (모든 상태 공통)
     events = pygame.event.get()
     for e in events:
         if e.type == pygame.QUIT:
             running = False
 
-    # 2. 상태별 로직
+    # 2. 상태별 로직 및 그리기
     if state == 'menu':
         menu.draw(screen)
         res = menu.update(events)
@@ -47,77 +59,92 @@ while running:
                 state = 'help'
 
     elif state == 'game':
-        # 게임 실행 (게임이 끝나면 점수를 반환)
         score = run_game(screen, nickname, car_type)
         save_score(nickname, score)
-        state = 'game_over' # 바로 메뉴로 가지 않고 게임오버 화면으로 이동
+        state = 'game_over'
 
     elif state == 'game_over':
-        # 배경 검은색
         screen.fill((0, 0, 0))
+        text_over = font_big.render("GAME OVER!", True, (255, 50, 50))
+        screen.blit(text_over, (SCREEN_W//2 - text_over.get_width()//2, 200))
 
-        # GAME OVER 텍스트
-        text_over = font_big.render("GAME OVER!", True, (255, 50, 50)) # 빨간색
-        rect_over = text_over.get_rect(center=(SCREEN_W/2, SCREEN_H/2 - 80))
-        screen.blit(text_over, rect_over)
-
-        # 점수 및 닉네임 표시
         info_text = f"{nickname} 님의 점수: {score}점"
         text_info = font_mid.render(info_text, True, (255, 255, 255))
-        rect_info = text_info.get_rect(center=(SCREEN_W/2, SCREEN_H/2 + 20))
-        screen.blit(text_info, rect_info)
+        screen.blit(text_info, (SCREEN_W//2 - text_info.get_width()//2, 350))
 
-        # 안내 문구
-        guide_text = font_small.render("스페이스바를 누르면 메뉴로 돌아갑니다.", True, (150, 150, 150))
-        rect_guide = guide_text.get_rect(center=(SCREEN_W/2, SCREEN_H/2 + 100))
-        screen.blit(guide_text, rect_guide)
-
-        pygame.display.flip()
-
-        # 키 입력 확인 (스페이스바 또는 엔터)
+        guide = font_small.render("스페이스바를 누르면 메뉴로 돌아갑니다.", True, (150, 150, 150))
+        screen.blit(guide, (SCREEN_W//2 - guide.get_width()//2, 500))
+        
         for e in events:
             if e.type == pygame.KEYDOWN:
                 if e.key == pygame.K_SPACE or e.key == pygame.K_RETURN:
                     state = 'menu'
 
     elif state == 'score':
+        # 스코어보드 그리기 함수 호출
         draw_scores(screen, font_mid)
-        # ESC 키로 뒤로가기
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_ESCAPE]:
-            state = 'menu'
+        
+        for e in events:
+            if e.type == pygame.KEYDOWN:
+                if e.key == pygame.K_ESCAPE:
+                    state = 'menu'
+                elif e.key == pygame.K_r:
+                    state = 'password_input'
+                    input_pw = ""
+                    pw_error_timer = 0
+
+    elif state == 'password_input':
+        screen.fill((20, 20, 20))
+        t = font_mid.render("관리자 비밀번호 입력", True, (255,255,255))
+        screen.blit(t, (SCREEN_W//2 - t.get_width()//2, 200))
+
+        masked = "*" * len(input_pw)
+        pw_surf = font_big.render(masked, True, (255, 255, 0))
+        screen.blit(pw_surf, (SCREEN_W//2 - pw_surf.get_width()//2, 300))
+
+        info = font_small.render("엔터: 확인 / ESC: 취소", True, (150,150,150))
+        screen.blit(info, (SCREEN_W//2 - info.get_width()//2, 450))
+
+        if pw_error_timer > 0:
+            err = font_small.render("비밀번호 불일치!", True, (255,0,0))
+            screen.blit(err, (SCREEN_W//2 - err.get_width()//2, 380))
+            pw_error_timer -= 1
+        
+        for e in events:
+            if e.type == pygame.KEYDOWN:
+                if e.key == pygame.K_ESCAPE:
+                    state = 'score'
+                elif e.key == pygame.K_BACKSPACE:
+                    input_pw = input_pw[:-1]
+                elif e.key == pygame.K_RETURN:
+                    if input_pw == "1022":
+                        reset_scores()
+                        state = 'score'
+                    else:
+                        pw_error_timer = 60
+                        input_pw = ""
+                else:
+                    if e.unicode.isnumeric() and len(input_pw) < 4:
+                        input_pw += e.unicode
 
     elif state == 'help':
         screen.fill((30, 30, 30))
-        lines = [
-            "=== 조작법 ===",
-            "이동: WASD 또는 방향키",
-            "",
-            "=== 피트레인 시스템 ===",
-            "내구도가 50% 이하로 떨어지면 속도가 느려집니다.",
-            "오른쪽 패널에 'OPEN' 신호가 뜨면",
-            "가장 오른쪽 차선에 붙어서 [ F ] 키를 누르세요.",
-            "화면에 나오는 방향키를 순서대로 입력하면 수리됩니다.",
-            "",
-            "ESC: 뒤로가기"
-        ]
-        
-        y = 100
-        for line in lines:
-            color = (255, 255, 0) if "===" in line else (255, 255, 255)
-            text = font_mid.render(line, True, color)
-            screen.blit(text, (SCREEN_W//2 - text.get_width()//2, y))
-            y += 45
-        
-        pygame.display.flip()
-        
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_ESCAPE]:
-            state = 'menu'
+        lines = ["조작법", "이동: WASD", "피트레인: 피트레인 오픈 시 우측 차선에서 F키를 눌러 진입 가능", "ESC: 뒤로가기"]
+        y = 150
+        for l in lines:
+            t = font_mid.render(l, True, (255,255,255))
+            screen.blit(t, (SCREEN_W//2 - t.get_width()//2, y))
+            y += 60
             
-    # 화면 업데이트는 각 상태 내부에서 처리하거나 여기서 공통 처리
-    # (위 코드에서는 각 상태별로 flip을 하거나 그리기 함수 안에서 처리함)
-    if state == 'menu': # 메뉴는 내부 루프가 없으므로 여기서 업데이트 필요
-        pygame.display.flip()
+        for e in events:
+            if e.type == pygame.KEYDOWN:
+                if e.key == pygame.K_ESCAPE:
+                    state = 'menu'
+
+    # 3. 화면 업데이트 (매우 중요: 루프 마지막에 한 번만 실행)
+    pygame.display.flip()
+    
+    # 4. 프레임 제한
+    clock.tick(60)
 
 pygame.quit()
