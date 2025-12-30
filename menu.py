@@ -24,7 +24,7 @@ class StartMenu:
 
     def draw(self, screen):
         screen.fill((30,30,40))
-        title = self.font_big.render('목련제 레이싱', True, (255,255,255))
+        title = self.font_big.render('피하go 달리go', True, (255,255,255))
         screen.blit(title, (1280/2 - title.get_width()/2, 150))
 
         if self.state == 'menu':

@@ -1,5 +1,6 @@
 from settings import CAR_TYPES, CENTER_W
 import pygame
+import os
 
 class Car:
     WIDTH = 50
@@ -27,6 +28,29 @@ class Car:
         self.x = CENTER_W//2 - self.WIDTH//2
         self.y = 720 - self.HEIGHT - 10
         self.nickname = nickname
+
+        # === [추가된 부분] 이미지 로드 로직 ===
+        # 이미지 파일 이름 매칭
+        image_files = {
+            'basic': 'basic.png',
+            'speed': 'speed.png',
+            'durable': 'durable.png'
+        }
+        
+        file_name = image_files.get(car_type, 'basic.png') # 기본값 설정
+        self.image = None
+        
+        # 이미지가 실제로 있는지 확인하고 로드
+        if os.path.exists(file_name):
+            try:
+                img = pygame.image.load(file_name).convert_alpha() # 투명 배경 지원
+                # 자동차 크기(WIDTH, HEIGHT)에 맞춰서 이미지 크기 조절
+                self.image = pygame.transform.scale(img, (self.WIDTH, self.HEIGHT))
+            except:
+                print(f"이미지 로드 실패: {file_name}")
+                self.image = None
+        else:
+            print(f"이미지 파일 없음: {file_name}")
 
     def update(self, keys, dt):
         dx = dy = 0
@@ -57,7 +81,7 @@ class Car:
         self.durability -= self.durability_per_sec * dt
 
     def take_collision(self):
-        self.durability -= 10 # 충돌 시 내구도 감소
+        self.durability -= 20 # 충돌 시 내구도 감소
 
     def repair_full(self):
         self.durability = float(self.max_durability)

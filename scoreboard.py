@@ -38,7 +38,7 @@ def draw_scores(screen, font):
     screen.blit(title, (SCREEN_W // 2 - title.get_width() // 2, 80))
 
     scores = load_scores()
-    y = 180
+    y = 130
     if not scores:
         no_data = font.render("기록이 없습니다.", True, (150, 150, 150))
         screen.blit(no_data, (SCREEN_W // 2 - no_data.get_width() // 2, y))

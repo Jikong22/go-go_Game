@@ -16,20 +16,20 @@ RIGHT_W = 300
 
 # 자동차 설정
 CAR_TYPES = {
-    'basic': {'speed': 300, 'durability_per_sec': 1.5, 'max_durability': 100},
-    'speed': {'speed': 400, 'durability_per_sec': 2.5, 'max_durability': 100},
-    'durable': {'speed': 200, 'durability_per_sec': 1, 'max_durability': 100}
+    'basic': {'speed': 300, 'durability_per_sec': 3, 'max_durability': 100},
+    'speed': {'speed': 400, 'durability_per_sec': 4, 'max_durability': 100},
+    'durable': {'speed': 200, 'durability_per_sec': 2, 'max_durability': 100}
 }
 
-OBSTACLE_SPEED = 200
+OBSTACLE_SPEED = 400
 
 SCORES_FILE = 'scores.json'
 
 # 피트레인 설정
-PIT_INTERVAL = 15.0
-PIT_BASE_CHANCE = 0.4
-PIT_CHANCE_INC = 0.05
-PIT_DURATION = 5.0
+PIT_INTERVAL = 10.0
+PIT_BASE_CHANCE = 0.5
+PIT_CHANCE_INC = 0.2
+PIT_DURATION = 3.0
 
 # === 폰트 자동 선택 로직 (강화됨) ===
 def get_korean_font_name():

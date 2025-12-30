@@ -129,7 +129,7 @@ while running:
 
     elif state == 'help':
         screen.fill((30, 30, 30))
-        lines = ["조작법", "이동: WASD", "피트레인: 피트레인 오픈 시 우측 차선에서 F키를 눌러 진입 가능", "ESC: 뒤로가기"]
+        lines = ["이동: WASD, 방향키", "피트레인: 피트레인 오픈 시 우측 차선에서 F키를 눌러 진입 가능", "장애물을 피해 달리세요!", "피트레인 진입 시 방향키를 사용해주세요."]
         y = 150
         for l in lines:
             t = font_mid.render(l, True, (255,255,255))
